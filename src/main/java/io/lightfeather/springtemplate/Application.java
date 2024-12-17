@@ -1,12 +1,10 @@
 package io.lightfeather.springtemplate;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +40,7 @@ public class Application {
   }
 
   @GetMapping("/api/supervisors")
-  public ResponseEntity<List<String>> getMethodName() {
+  public ResponseEntity<List<String>> getSupervisors() {
     try {
       // make get request
       URI uri = new URI(source);
@@ -75,8 +72,8 @@ public class Application {
 
       return ResponseEntity.status(HttpStatus.OK).body(output);
 
-    } catch(URISyntaxException | IOException ex) {
-      return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Collections.emptyList());
+    } catch(Exception ex) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
     }
   }
 
@@ -85,7 +82,7 @@ public class Application {
     StringBuilder stringBuilder = new StringBuilder();
 
     // return error status code if required parameters are empty
-    if(firstName.isBlank() || lastName.isBlank() || supervisor.isBlank()) {
+    if(firstName == null || firstName.isBlank() || lastName ==  null || lastName.isBlank() || supervisor == null || supervisor.isBlank()) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required data");
     }
     // write params to console if present
