@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,36 +43,41 @@ public class Application {
   }
 
   @GetMapping("/api/supervisors")
-  public List<String> getMethodName() throws URISyntaxException, IOException {
+  public ResponseEntity<List<String>> getMethodName() {
+    try {
+      // make get request
+      URI uri = new URI(source);
+      HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
+      con.setRequestMethod("GET");
+      InputStream inputStream = con.getInputStream();
 
-    // make get request
-    URI uri = new URI(source);
-    HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
-    con.setRequestMethod("GET");
-    InputStream inputStream = con.getInputStream();
+      // read input as string
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+      StringBuilder result = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+          result.append(line);
+      }
 
-    // read input as string
-    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    StringBuilder result = new StringBuilder();
-    String line;
-    while ((line = reader.readLine()) != null) {
-        result.append(line);
+      // map input to list, filter, and sort
+      ObjectMapper objectMapper = new ObjectMapper();
+      List<Supervisor> supervisors = objectMapper.readValue(result.toString(), new TypeReference<Set<Supervisor>>() {})
+                                                  .stream()
+                                                  .filter(s -> !s.isJurisdictionNumeric())
+                                                  .sorted()
+                                                  .toList();
+
+      // return list of strings
+      List<String> output = new ArrayList<>();
+      for(Supervisor supervisor : supervisors) {
+        output.add(supervisor.toString()); 
+      }
+
+      return ResponseEntity.status(HttpStatus.OK).body(output);
+
+    } catch(URISyntaxException | IOException ex) {
+      return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Collections.emptyList());
     }
-
-    // map input to list, filter, and sort
-    ObjectMapper objectMapper = new ObjectMapper();
-    List<Supervisor> supervisors = objectMapper.readValue(result.toString(), new TypeReference<Set<Supervisor>>() {})
-                                               .stream()
-                                               .filter(s -> !s.isJurisdictionNumeric())
-                                               .sorted()
-                                               .toList();
-
-    // return list of strings
-    List<String> output = new ArrayList<>();
-    for(Supervisor supervisor : supervisors) {
-      output.add(supervisor.toString()); 
-    }
-    return output;
   }
 
   @PostMapping("/api/submit")
@@ -98,7 +105,6 @@ public class Application {
       return ResponseEntity.status(HttpStatus.OK).body(stringBuilder.toString());
     }
   }
-
 
   public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
