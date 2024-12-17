@@ -92,7 +92,7 @@ public class Application {
       if(phoneNumber != null && !phoneNumber.isBlank()) {
         stringBuilder.append(", Phone Number: " + phoneNumber);
       }
-      System.console().printf(stringBuilder.toString() + "\n");
+      System.out.println(stringBuilder.toString());
 
       // return success status code
       return ResponseEntity.status(HttpStatus.OK).body(stringBuilder.toString());
