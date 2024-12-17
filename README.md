@@ -1,5 +1,5 @@
 # Overview
-This template provides a very basic Spring Boot application. This is intended to provide a bare minimum set of files that is executable, and can be compiled into a functional docker image.
+This project exposes an API that allows an application to retrieve a list of supervisors and submit personal information.
 
 # Running locally with gradle
 gradle build
